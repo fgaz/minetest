@@ -774,6 +774,12 @@ enable_split_login_register (Enable split login/register) bool true
 #    URL to JSON file which provides information about the newest Minetest release
 update_information_url (Update information URL) string https://www.minetest.net/release_info.json
 
+#    Git credential helper to run on login if the password field is left blank.
+#    See https://git-scm.com/docs/gitcredentials#_custom_helpers for more info.
+#    You can find a list of existing helpers at
+#    https://repology.org/projects/?search=git-credential-
+git_credential_helper (Git credential helper) string
+
 [*Server]
 
 #    Name of the player.

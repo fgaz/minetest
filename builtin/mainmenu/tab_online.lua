@@ -356,6 +356,42 @@ local function main_button_handler(tabview, fields, name, tabdata)
 		gamedata.address    = fields.te_address
 		gamedata.port       = te_port_number
 
+		local git_credential_helper = core.settings:get("git_credential_helper") or ""
+		-- TODO check for errors
+		if gamedata.password == "" and git_credential_helper ~= "" then
+			-- Different helpers require different subsets of parameters,
+			-- here we just set all we have available.
+			-- NOTE: the minetest protocol is not finalized, see
+			-- https://github.com/minetest/minetest/issues/7400
+			local input = string.format(
+[[url=minetest://%s:%s
+protocol=minetest
+username=%s
+host=%s:%s
+]]
+			   , gamedata.address
+			   , gamedata.port
+			   , gamedata.playername
+			   , gamedata.address
+			   , gamedata.port
+			)
+			-- NOTE: can't read AND write from/to a pipe, so we use a file for
+			-- the input, and not for the output since we don't want to expose
+			-- passwords.
+			local inputname = core.get_temp_path(true)
+			local inputfile = io.open(inputname, "w")
+			inputfile:write(input)
+			inputfile:close()
+			local cmd = git_credential_helper .. " get < " .. inputname
+			local pipe = io.popen(cmd)
+			for line in pipe:lines() do
+				gamedata.password = string.match(line, "password=(.*)")
+				if gamedata.password then break end
+			end
+			pipe:close()
+			os.remove(inputname)
+		end
+
 		local enable_split_login_register = core.settings:get_bool("enable_split_login_register")
 		gamedata.allow_login_or_register = enable_split_login_register and "login" or "any"
 		gamedata.selected_world = 0
